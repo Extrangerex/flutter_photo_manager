@@ -821,6 +821,7 @@ class AssetEntity {
       longitude: longitude ?? this.longitude,
       mimeType: mimeType ?? this.mimeType,
       subtype: subtype ?? this.subtype,
+      isPrivate: isPrivate ?? this.isPrivate,
     );
   }
 
