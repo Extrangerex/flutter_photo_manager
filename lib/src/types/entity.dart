@@ -342,6 +342,7 @@ class AssetEntity {
     this.createDateSecond,
     this.modifiedDateSecond,
     this.relativePath,
+    this.isPrivate = false,
     double? latitude,
     double? longitude,
     this.mimeType,
@@ -748,6 +749,9 @@ class AssetEntity {
   ///  * https://developer.android.com/reference/android/provider/MediaStore.MediaColumns#ORIENTATION
   final int orientation;
 
+  // isPrivate
+  final bool isPrivate;
+
   /// Whether the asset is favorite on the device.
   ///  * Android: Always false.
   ///  * iOS/macOS: `PHAsset.isFavorite`.
@@ -792,6 +796,7 @@ class AssetEntity {
     int? orientation,
     bool? isFavorite,
     String? title,
+    bool? isPrivate,
     int? createDateSecond,
     int? modifiedDateSecond,
     String? relativePath,
