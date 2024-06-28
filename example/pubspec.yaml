@@ -1,21 +1,22 @@
 name: photo_manager_example
 description: Demonstrates how to use the photo_manager plugin.
-version: 2.5.2+25
+version: 3.2.0+27
 publish_to: none
 
 environment:
-  sdk: ">=2.13.0 <3.0.0"
-  flutter: ">=2.2.0"
+  sdk: ">=2.19.0"
+  flutter: ">=3.7.0"
 
 dependencies:
   flutter:
     sdk: flutter
 
-  http: ^0.13.0
+  photo_manager: # override
+  photo_manager_image_provider: ^2.1.1
+
+  http: ">=0.13.6 <2.0.0"
   oktoast: ^3.1.0
   path_provider: ^2.0.5
-  photo_manager:
-    path: ../
   provider: ^6.0.0
   url_launcher: ^6.1.10
   video_player: ^2.1.14
@@ -28,3 +29,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+dependency_overrides:
+  photo_manager:
+    path: ../

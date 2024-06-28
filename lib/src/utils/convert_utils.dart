@@ -2,6 +2,10 @@
 // Use of this source code is governed by an Apache license that can be found
 // in the LICENSE file.
 
+import 'dart:io';
+
+import 'package:photo_manager/platform_utils.dart';
+
 import '../filter/base_filter.dart';
 import '../filter/classical/filter_option_group.dart';
 import '../filter/path_filter.dart';
@@ -54,22 +58,48 @@ class ConvertUtils {
     final DateTime? lastModified = modified != null
         ? DateTime.fromMillisecondsSinceEpoch(modified * 1000)
         : null;
+    AlbumType? albumTypeEx;
+    if (Platform.isIOS || Platform.isMacOS) {
+      albumTypeEx = AlbumType(
+        darwin: DarwinAlbumType(
+          type: PMDarwinAssetCollectionTypeExt.fromValue(
+            data['darwinAssetCollectionType'],
+          ),
+          subtype: PMDarwinAssetCollectionSubtypeExt.fromValue(
+            data['darwinAssetCollectionSubtype'],
+          ),
+        ),
+      );
+    } else if (PlatformUtils.isOhos) {
+      albumTypeEx = AlbumType(
+        ohos: OhosAlbumType(
+          type: PMOhosAlbumTypeExt.fromValue(
+            data['ohosAlbumType'],
+          ),
+          subtype: PMOhosAlbumSubtypeExt.fromValue(
+            data['ohosAlbumSubtype'],
+          ),
+        ),
+      );
+    }
     final AssetPathEntity result = AssetPathEntity(
       id: data['id'] as String,
       name: data['name'] as String,
       // ignore: deprecated_member_use_from_same_package
-      assetCount: data['assetCount'] as int? ?? 0,
       albumType: data['albumType'] as int? ?? 1,
       filterOption: filterOption ?? FilterOptionGroup(),
       lastModified: lastModified,
       type: type,
       isAll: data['isAll'] as bool,
+      // ignore: deprecated_member_use_from_same_package
       darwinType: PMDarwinAssetCollectionTypeExt.fromValue(
         data['darwinAssetCollectionType'],
       ),
+      // ignore: deprecated_member_use_from_same_package
       darwinSubtype: PMDarwinAssetCollectionSubtypeExt.fromValue(
         data['darwinAssetCollectionSubtype'],
       ),
+      albumTypeEx: albumTypeEx,
     );
     return result;
   }

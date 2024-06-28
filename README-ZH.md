@@ -11,13 +11,13 @@ that can be found in the LICENSE file. -->
 [![Build status](https://img.shields.io/github/actions/workflow/status/fluttercandies/flutter_photo_manager/runnable.yml?branch=main&label=CI&logo=github&style=flat-square)](https://github.com/fluttercandies/flutter_photo_manager/actions/workflows/runnable.yml)
 [![GitHub license](https://img.shields.io/github/license/fluttercandies/flutter_photo_manager)](https://github.com/fluttercandies/flutter_photo_manager/blob/main/LICENSE)
 
-[![GitHub stars](https://img.shields.io/github/stars/fluttercandies/flutter_photo_manager?style=social&label=Stars)](https://github.com/fluttercandies/flutter_photo_manager/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/fluttercandies/flutter_photo_manager?logo=github&style=flat-square)](https://github.com/fluttercandies/flutter_photo_manager/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/fluttercandies/flutter_photo_manager?logo=github&style=flat-square)](https://github.com/fluttercandies/flutter_photo_manager/network)
 [![Awesome Flutter](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](https://github.com/Solido/awesome-flutter)
 <a target="_blank" href="https://jq.qq.com/?_wv=1027&k=5bcc0gy"><img border="0" src="https://pub.idqqimg.com/wpa/images/group.png" alt="FlutterCandies" title="FlutterCandies"></a>
 
 通过相册的抽象 API 对设备中的资源（图片、视频、音频）进行管理，不需要集成 UI。
-在 Android、iOS 和 macOS 上可用。
+在 Android、iOS、macOS and OpenHarmony上可用。
 
 ## 集成此插件的推荐项目
 
@@ -38,7 +38,7 @@ that can be found in the LICENSE file. -->
   <summary>目录列表</summary>
 
 <!-- TOC -->
-* [photo_manager](#photomanager)
+* [photo_manager](#photo_manager)
   * [集成此插件的推荐项目](#集成此插件的推荐项目)
   * [关于此插件的文章](#关于此插件的文章)
   * [破坏性改动迁移指南](#破坏性改动迁移指南)
@@ -49,18 +49,20 @@ that can be found in the LICENSE file. -->
     * [原生平台的配置](#原生平台的配置)
       * [Android 配置准备](#android-配置准备)
         * [Kotlin, Gradle, AGP](#kotlin-gradle-agp)
-        * [Android 10 (Q, 29)](#android-10--q-29-)
+        * [Android 10 (Q, 29)](#android-10-q-29)
         * [Glide](#glide)
       * [iOS 配置准备](#ios-配置准备)
   * [使用方法](#使用方法)
     * [请求权限](#请求权限)
-      * [iOS 受限的资源权限](#ios-受限的资源权限)
-    * [获取相簿或图集 (`AssetPathEntity`)](#获取相簿或图集--assetpathentity-)
+      * [受限的资源权限](#受限的资源权限)
+        * [iOS 受限的资源权限](#ios-受限的资源权限)
+        * [Android 受限的资源权限](#android-受限的资源权限)
+    * [获取相簿或图集 (`AssetPathEntity`)](#获取相簿或图集-assetpathentity)
       * [`getAssetPathList` 方法的参数](#getassetpathlist-方法的参数)
       * [PMPathFilterOption](#pmpathfilteroption)
-    * [获取资源 (`AssetEntity`)](#获取资源--assetentity-)
+    * [获取资源 (`AssetEntity`)](#获取资源-assetentity)
       * [通过 `AssetPathEntity` 获取](#通过-assetpathentity-获取)
-      * [通过 `PhotoManager` 方法 (2.6.0+) 获取](#通过-photomanager-方法--260--获取)
+      * [通过 `PhotoManager` 方法 (2.6.0+) 获取](#通过-photomanager-方法-260-获取)
       * [通过 ID 获取](#通过-id-获取)
       * [通过原始数据获取](#通过原始数据获取)
       * [通过 iCloud 获取](#通过-icloud-获取)
@@ -85,7 +87,8 @@ that can be found in the LICENSE file. -->
   * [原生额外配置](#原生额外配置)
     * [Android 额外配置](#android-额外配置)
       * [Glide 相关问题](#glide-相关问题)
-      * [Android 13 (API level 33) 额外配置](#android-13--api-level-33--额外配置)
+      * [Android 14 (API level 34) 额外配置](#android-14-api-level-34-额外配置)
+      * [Android 13 (API level 33) 额外配置](#android-13-api-level-33-额外配置)
     * [iOS 额外配置](#ios-额外配置)
       * [配置系统相册名称的国际化](#配置系统相册名称的国际化)
     * [实验性功能](#实验性功能)
@@ -94,12 +97,14 @@ that can be found in the LICENSE file. -->
       * [复制资源](#复制资源)
       * [仅适用于 Android 的功能](#仅适用于-android-的功能)
         * [将资源移动到另一个相册](#将资源移动到另一个相册)
+        * [将资源移动到废纸篓](#将资源移动到废纸篓)
         * [移除所有不存在的资源](#移除所有不存在的资源)
       * [适用于 iOS 或 macOS 的功能](#适用于-ios-或-macos-的功能)
         * [创建一个文件夹](#创建一个文件夹)
         * [创建一个相簿](#创建一个相簿)
         * [从相册中移除资源](#从相册中移除资源)
         * [删除 `AssetPathEntity`](#删除-assetpathentity)
+      * [适用于 OpenHarmony 的功能](#适用于-openharmony-的功能)
 <!-- TOC -->
 
 </details>
@@ -144,7 +149,7 @@ import 'package:photo_manager/photo_manager.dart';
 
 ##### Kotlin, Gradle, AGP
 
-该插件使用 **Kotlin `1.6.21`** 来构建。
+该插件使用 **Kotlin `1.7.22`** 来构建。
 如果你的项目使用了低于此版本的 Kotlin/Gradle/AGP，请升级到大于或等于指定版本。
 
 更具体的做法:
@@ -152,7 +157,7 @@ import 'package:photo_manager/photo_manager.dart';
 - 更新你的 Gradle version (`gradle-wrapper.properties`)
   到 `7.5.1` 或者最新版本。
 - 更新你的 Kotlin version (`ext.kotlin_version`)
-  到 `1.7.21` 或者最新版本。
+  到 `1.7.22` 或者最新版本。
 - 更新你的 AGP version (`com.android.tools.build:gradle`)
   或者 `7.2.2` 或者最新版本。
 
@@ -214,7 +219,10 @@ Android 10 引入了 **Scoped Storage**，导致原始资源文件不能通过�
 ```dart
 final PermissionState ps = await PhotoManager.requestPermissionExtend();
 if (ps.isAuth) {
-  // 已获取到权限。
+  // 已获取到权限
+} else if (ps.hasAccess) {
+  // 已获取到权限（哪怕只是有限的访问权限）。
+  // iOS Android 目前都已经有了部分权限的概念。
 } else {
   // 权限受限制（iOS）或者被拒绝，使用 `==` 能够更准确的判断是受限还是拒绝。
   // 你可以使用 `PhotoManager.openSetting()` 打开系统设置页面进行进一步的逻辑定制。
@@ -228,14 +236,32 @@ PhotoManager.setIgnorePermissionCheck(true);
 
 对于一些后台操作（应用未启动等）而言，忽略检查是比较合适的做法。
 
-#### iOS 受限的资源权限
+#### 受限的资源权限
+
+##### iOS 受限的资源权限
 
 iOS14 引入了部分资源限制的权限 (`PermissionState.limited`)。
 `PhotoManager.requestPermissionExtend()` 会返回当前的权限状态 `PermissionState`。
 详情请参阅 [PHAuthorizationStatus][]。
 
 如果你想要重新选择在应用里能够读取到的资源，你可以使用 `PhotoManager.presentLimited()` 重新选择资源，
-这个方法仅在 iOS 14 以上的版本生效，其他平台或版本无法调用这个方法。
+这个方法对于 iOS 14 以上的版本生效。
+
+如果你想要禁止每次应用重新启动后访问媒体时自动弹出提示，
+你可以将 `Info.plist` 的 `Prevent limited photos access alert` 设置为 `YES`
+（或者像下面一样手动编写）：
+
+```plist
+<key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
+<true/>
+```
+
+##### Android 受限的资源权限
+
+与 iOS 类似，Android 14 (API 34) 中也引入了这个概念。
+它们在行为上略有不同（基于模拟器）：
+在 Android 中一旦授予某个资源的访问权限，就无法撤销，
+即使再次使用 `presentLimited` 时不选中也不会撤销对它的访问权限。
 
 ### 获取相簿或图集 (`AssetPathEntity`)
 
@@ -252,13 +278,13 @@ final List<AssetPathEntity> paths = await PhotoManager.getAssetPathList();
 
 #### `getAssetPathList` 方法的参数
 
-| 参数名           | 说明                                                         | 默认值              |
-| :--------------- | ------------------------------------------------------------ | ------------------- |
-| hasAll           | 如果你需要一个包含所有资源（AssetEntity) 的 PathEntity ，传入 true | true                |
-| onlyAll          | 如果你只需要一个包含所有资源的，传入true                     | false               |
-| type             | 资源文件的类型（视频、图片、音频）                           | RequestType.common  |
-| filterOption     | 用于筛选 AssetEntity，详情请参阅 [过滤资源](#过滤资源)       | FilterOptionGroup() |
-| pathFilterOption | 只对 iOS 和 macOS生效，对应原生中的相册类型，详情请参阅 [PMPathFilterOption](#pmpathfilteroption)。 | 默认为包含所有      |
+| 参数名              | 说明                                                                           | 默认值                 |
+|:-----------------|------------------------------------------------------------------------------|---------------------|
+| hasAll           | 如果你需要一个包含所有资源（AssetEntity) 的 PathEntity ，传入 true                             | true                |
+| onlyAll          | 如果你只需要一个包含所有资源的，传入true                                                       | false               |
+| type             | 资源文件的类型（视频、图片、音频）                                                            | RequestType.common  |
+| filterOption     | 用于筛选 AssetEntity，详情请参阅 [过滤资源](#过滤资源)                                         | FilterOptionGroup() |
+| pathFilterOption | 只对 iOS 和 macOS生效，对应原生中的相册类型，详情请参阅 [PMPathFilterOption](#pmpathfilteroption)。 | 默认为包含所有             |
 
 #### PMPathFilterOption
 
@@ -382,9 +408,17 @@ iOS 为了节省磁盘空间，可能将资源仅保存在 iCloud 上。
 
 #### 展示资源
 
-插件提供 `AssetEntityImage` widget 和
+从 v3.0.0 开始，插件不再提供任何 UI 组件。
+`AssetEntityImage` 和 `AssetEntityImageProvider` 在
+[`photo_manager_image_provider`][photo_manager_image_provider]
+插件中提供。
+
+新的插件提供 `AssetEntityImage` widget 和
 `AssetEntityImageProvider` 来处理资源的展示：
+
 ```dart
+import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
+
 final Widget image = AssetEntityImage(
   yourAssetEntity,
   isOriginal: false,
@@ -695,10 +729,23 @@ rootProject.allprojects {
 如果你想了解如何同时使用 ProGuard 和 Glide，请参阅
 [ProGuard for Glide](https://github.com/bumptech/glide#proguard)。
 
+#### Android 14 (API level 34) 额外配置
+
+当你的应用在 API 34 (Android 14) 的设备上运行时，
+就算你的 `targetSdkVersion` 和 `compileSdkVersion` 不是 `34`，
+你也需要在清单文件中添加以下权限配置：
+
+```xml
+<manifest>
+   <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" /> <!-- 如果需要提供可选的资源的功能 -->
+</manifest>
+```
+
 #### Android 13 (API level 33) 额外配置
 
-当应用的 `targetSdkVersion` 为 33 (Android 13) 时，
-你需要在清单文件中添加以下额外配置：
+当你的应用在 API 33 (Android 13) 的设备上运行时，
+就算你的 `targetSdkVersion` 和 `compileSdkVersion` 不是 `33`，
+你也需要在清单文件中添加以下权限配置：
 
 ```xml
 <manifest>
@@ -812,6 +859,14 @@ await PhotoManager.editor.android.moveAssetToAnother(
 
 （对于 Android 30+，由于系统限制，此功能当前被屏蔽。）
 
+##### 将资源移动到废纸篓
+
+```dart
+await PhotoManager.editor.android.moveToTrash(list);
+```
+
+这个方法用于将资源移动到废纸篓，它仅支持安卓 API 30+，低于 30 的 API 会抛出异常。
+
 ##### 移除所有不存在的资源
 
 这将删除所有本地不存在的相册条目。
@@ -877,6 +932,18 @@ await PhotoManager.editor.darwin.removeAssetsInAlbum(
 PhotoManager.editor.darwin.deletePath();
 ```
 
+#### 适用于 OpenHarmony 的功能
+
+目前支持大部分的功能，除了跟缓存相关。目前鸿蒙只支持图片和视频 2 种资源类型。
+
+| Feature                        | OpenHarmony |
+| :----------------------------- | :---------: |
+| releaseCache                   |      ❌      |
+| clearFileCache                 |      ❌      |
+| requestCacheAssetsThumbnail    |      ❌      |
+| getSubPathEntities             |      ❌      |
+
+
 [pub package]: https://pub.flutter-io.cn/packages/photo_manager
 [repo]: https://github.com/fluttercandies/flutter_photo_manager
 [GitHub issues]: https://github.com/fluttercandies/flutter_photo_manager/issues
@@ -899,3 +966,4 @@ PhotoManager.editor.darwin.deletePath();
 [`LocallyAvailableBuilder`]: https://github.com/fluttercandies/flutter_wechat_assets_picker/blob/2055adfa74370339d10e6f09adef72f2130d2380/lib/src/widget/builder/locally_available_builder.dart
 
 [flutter/flutter#20522]: https://github.com/flutter/flutter/issues/20522
+[photo_manager_image_provider]: https://pub.flutter-io.cn/packages/photo_manager_image_provider

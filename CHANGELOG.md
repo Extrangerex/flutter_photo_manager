@@ -4,6 +4,96 @@ that can be found in the LICENSE file. -->
 
 # CHANGELOG
 
+To know more about breaking changes, see the [Migration Guide][].
+
+## 3.2.0
+
+### Improvements
+
+* Restores `containsLivePhotos` to `true` by default and deprecates it.
+* Use the main resource's filename for title by default on iOS.
+* Support more methods on the OpenHarmony.
+
+### Fixes
+
+* Fix obtaining the correct resource from various types of resources on iOS.
+* Fix `isLocallyAvailable` for edited assets on iOS.
+
+## 3.1.1
+
+### Improvements
+
+* Update plugin structure for OpenHarmony.
+
+## 3.1.0
+
+### Breaking changes
+
+- `AssetPathEntity.darwinType` and `AssetPathEntity.darwinSubtype` are deprecated.
+- `containsLivePhotos` now defaults to `false`.
+
+See the [Migration Guide][] for details of breaking changes.
+
+### Features
+
+- Support OpenHarmony.
+
+### Fixes
+
+- Do not predicate subtypes images as adjusted on Darwin.
+- Fix `PMProgressHandler` not getting notified when failed on Darwin.
+- Merge Android API 29 and 30 `PermissionDelegate`s
+  which allows Android API 29 to grant permissions without `WRITE_EXTERNAL_STORAGE`.
+
+### Improvements
+
+- Improve code formatting.
+- Add privacy file for iOS/macOS. (#1120)
+
+## 3.0.0
+
+### Breaking changes
+
+See the [Migration Guide][] for details of breaking changes.
+
+### Improvements
+
+- Remove the restriction of `getMediaUrl`.
+
+### Fixes
+
+- Fix `PhotoManager.editor.deleteWithIds` method not working on Android API 29.
+- Dispatch channel calls in main thread on Darwin.
+- Fix `presentLimit` did not finish on Android. (#1052)
+- Fix `requestPermissionExtend` returns the incorrect status on Android API 34.
+
+## 2.8.1
+
+### Fixes
+
+- Upgrade android/build.gradle to load current java version from some environment variables.
+- Fix the `setIgnorePermissionCheck` method not working on Android.
+
+## 2.8.0
+
+### Breaking changes
+
+See the [Migration Guide][] for details of breaking changes.
+
+### Features
+
+- Support Android 14 limited access to assets.
+
+### Fixes
+
+- Correct the key when fetching video info with MMR on Android. (#997)
+- Retrieve original media instead of one with adjustments/filters for subtype files on iOS. (#976)
+- Returns original file name instead of `FullSizeRender.*` if this has adjustments on iOS. (#976)
+
+### Improvements
+
+- Add locks to the image provider.
+
 ## 2.7.1
 
 ### Fixes
@@ -40,7 +130,7 @@ that can be found in the LICENSE file. -->
 - Add two new static methods for `PhotoManager`:
   - `getAssetCount` for getting assets count.
   - `getAssetListRange` for getting assets between start and end.
-  
+
 ## 2.5.2
 
 ### Improvements
@@ -256,7 +346,10 @@ that can be found in the LICENSE file. -->
 
 A major version release for performance improvements, new features, issues fixed, and breaking changes.
 Also, the LICENSE has been updated with the new author [FlutterCandies](https://github.com/fluttercandies).
-To know more about breaking changes, see the [Migration Guide][].
+
+### Breaking changes
+
+See the [Migration Guide][] for details of breaking changes.
 
 ### Features
 

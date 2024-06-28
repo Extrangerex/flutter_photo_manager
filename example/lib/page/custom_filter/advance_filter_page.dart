@@ -4,9 +4,9 @@ import 'package:photo_manager_example/page/custom_filter/order_by_action.dart';
 
 class AdvancedCustomFilterPage extends StatefulWidget {
   const AdvancedCustomFilterPage({
-    Key? key,
+    super.key,
     required this.builder,
-  }) : super(key: key);
+  });
 
   final Widget Function(BuildContext context, CustomFilter filter) builder;
 
@@ -50,7 +50,9 @@ class _AdvancedCustomFilterPageState extends State<AdvancedCustomFilterPage> {
           WhereAction(
             where: _where,
             onChanged: (value) {
-              if (!mounted) return;
+              if (!mounted) {
+                return;
+              }
               setState(() {
                 _where.clear();
                 _where.addAll(value);
@@ -60,7 +62,9 @@ class _AdvancedCustomFilterPageState extends State<AdvancedCustomFilterPage> {
           OrderByAction(
             items: _orderBy,
             onChanged: (values) {
-              if (!mounted) return;
+              if (!mounted) {
+                return;
+              }
               setState(() {
                 _orderBy.clear();
                 _orderBy.addAll(values);
@@ -82,11 +86,11 @@ class _AdvancedCustomFilterPageState extends State<AdvancedCustomFilterPage> {
 
 class WhereAction extends StatelessWidget {
   const WhereAction({
-    Key? key,
+    super.key,
     required this.where,
     required this.onChanged,
     // required this
-  }) : super(key: key);
+  });
 
   final List<WhereConditionItem> where;
   final ValueChanged<List<WhereConditionItem>> onChanged;
@@ -96,12 +100,14 @@ class WhereAction extends StatelessWidget {
     return IconButton(
       icon: const Icon(Icons.filter_alt),
       onPressed: () {
+        _WhereConditionPage._saveItems = null;
         Navigator.push<List<WhereConditionItem>>(
           context,
           MaterialPageRoute(
             builder: (context) => _WhereConditionPage(where: where),
           ),
         ).then((value) {
+          value ??= _WhereConditionPage._saveItems;
           if (value != null) {
             onChanged(value);
           }
@@ -113,11 +119,12 @@ class WhereAction extends StatelessWidget {
 
 class _WhereConditionPage extends StatefulWidget {
   const _WhereConditionPage({
-    Key? key,
     required this.where,
-  }) : super(key: key);
+  });
 
   final List<WhereConditionItem> where;
+
+  static List<WhereConditionItem>? _saveItems;
 
   @override
   State<_WhereConditionPage> createState() => _WhereConditionPageState();
@@ -132,63 +139,32 @@ class _WhereConditionPageState extends State<_WhereConditionPage> {
   void initState() {
     super.initState();
     _where.addAll(widget.where);
-  }
-
-  Future<bool> _onWillPop() {
-    if (!isChanged) {
-      return Future.value(true);
-    }
-    return showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Are you sure?'),
-          content: const Text('Do you want to leave without saving?'),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('No'),
-              onPressed: () {
-                Navigator.of(context).pop(false);
-              },
-            ),
-            TextButton(
-              child: const Text('Yes'),
-              onPressed: () {
-                Navigator.of(context).pop(true);
-              },
-            ),
-          ],
-        );
-      },
-    ).then((value) => value == true);
+    _WhereConditionPage._saveItems = _where;
   }
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: _onWillPop,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Where Condition'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: _createNew,
-            ),
-          ],
-        ),
-        body: buildList(context),
-        floatingActionButton: FloatingActionButton(
-          child: const Icon(Icons.done),
-          onPressed: () {
-            Navigator.of(context).pop(_where);
-          },
-        ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Where Condition'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: _createNew,
+          ),
+        ],
+      ),
+      body: buildList(context),
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.done),
+        onPressed: () {
+          Navigator.of(context).pop(_where);
+        },
       ),
     );
   }
 
-  void _createNew() async {
+  Future<void> _createNew() async {
     final result = await showDialog<WhereConditionItem>(
       context: context,
       builder: (context) {
@@ -226,7 +202,7 @@ class _WhereConditionPageState extends State<_WhereConditionPage> {
 }
 
 class _CreateWhereDialog extends StatefulWidget {
-  const _CreateWhereDialog({Key? key}) : super(key: key);
+  const _CreateWhereDialog();
 
   @override
   State<_CreateWhereDialog> createState() => _CreateWhereDialogState();
@@ -241,7 +217,7 @@ class _CreateWhereDialogState extends State<_CreateWhereDialog> {
   String condition = '==';
   TextEditingController textValueController = TextEditingController();
 
-  var _date = DateTime.now();
+  DateTime _date = DateTime.now();
 
   WhereConditionItem createItem() {
     final cond = condition;
@@ -282,7 +258,9 @@ class _CreateWhereDialogState extends State<_CreateWhereDialog> {
                 );
               }).toList(),
               onChanged: (value) {
-                if (value == null) return;
+                if (value == null) {
+                  return;
+                }
                 setState(() {
                   column = value;
                 });
@@ -298,7 +276,9 @@ class _CreateWhereDialogState extends State<_CreateWhereDialog> {
                 );
               }).toList(),
               onChanged: (value) {
-                if (value == null) return;
+                if (value == null) {
+                  return;
+                }
                 setState(() {
                   condition = value;
                 });
@@ -358,7 +338,9 @@ class _CreateWhereDialogState extends State<_CreateWhereDialog> {
               firstDate: DateTime(1970),
               lastDate: DateTime(2100),
             );
-            if (date == null) return;
+            if (date == null) {
+              return;
+            }
             setState(() {
               _date = date;
             });

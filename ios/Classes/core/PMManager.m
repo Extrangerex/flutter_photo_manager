@@ -12,8 +12,6 @@
 #import "PMPathFilterOption.h"
 
 @implementation PMManager {
-    BOOL __isAuth;
-    BOOL __isOnlyAddAuth;
     PMCacheContainer *cacheContainer;
 
     PHCachingImageManager *__cachingManager;
@@ -22,28 +20,9 @@
 - (instancetype)init {
     self = [super init];
     if (self) {
-        __isAuth = NO;
         cacheContainer = [PMCacheContainer new];
     }
-
     return self;
-}
-
-- (BOOL)isAuth {
-    return __isAuth;
-}
-
-- (void)setAuth:(BOOL)auth {
-    __isAuth = auth;
-}
-
-
-- (BOOL)isOnlyAddAuth {
-    return __isOnlyAddAuth;
-}
-
-- (void)setOnlyAddAuth:(BOOL)auth {
-    __isOnlyAddAuth = auth;
 }
 
 - (PHCachingImageManager *)cachingManager {
@@ -189,9 +168,14 @@
     if (isExist) {
         return YES;
     }
-    NSArray *rArray = [PHAssetResource assetResourcesForAsset:asset];
+    if (!resource) {
+        resource = [asset getCurrentResource];
+    }
+    if (!resource) {
+        return NO;
+    }
     // If this returns NO, then the asset is in iCloud or not saved locally yet.
-    return [[rArray.firstObject valueForKey:@"locallyAvailable"] boolValue];
+    return [[resource valueForKey:@"locallyAvailable"] boolValue];
 }
 
 #pragma clang diagnostic push
@@ -391,10 +375,6 @@
 }
 
 - (PMAssetEntity *)getAssetEntity:(NSString *)assetId {
-    if (!self.isAuth) {
-        return nil;
-    }
-    
     return [self getAssetEntity:assetId withCache:YES];
 }
 
@@ -460,6 +440,12 @@
                       contentMode:option.contentMode
                           options:requestOptions
                     resultHandler:^(PMImage *result, NSDictionary *info) {
+        if (info[PHImageErrorKey]) {
+            [handler reply: nil];
+            [self notifySuccess:progressHandler];
+            return;
+        }
+
         BOOL downloadFinished = [PMManager isDownloadFinish:info];
 
         if (!downloadFinished) {
@@ -550,7 +536,7 @@
         if (error) {
             NSLog(@"error = %@", error);
             [self notifyProgress:progressHandler progress:0 state:PMProgressStateFailed];
-            [handler reply:nil];
+            [handler replyError:[NSString stringWithFormat:@"%@", error]];
         } else {
             [handler reply:path];
             [self notifySuccess:progressHandler];
@@ -559,7 +545,7 @@
 }
 
 - (void)fetchOriginVideoFile:(PHAsset *)asset handler:(NSObject <PMResultHandler> *)handler progressHandler:(NSObject <PMProgressHandlerProtocol> *)progressHandler {
-    PHAssetResource *resource = [asset getAdjustResource];
+    PHAssetResource *resource = [asset getCurrentResource];
     if (!resource) {
         [handler reply:nil];
         return;
@@ -591,7 +577,7 @@
         if (error) {
             NSLog(@"error = %@", error);
             [self notifyProgress:progressHandler progress:0 state:PMProgressStateFailed];
-            [handler reply:nil];
+            [handler replyError:[NSString stringWithFormat:@"%@", error]];
         } else {
             [handler reply:path];
             [self notifySuccess:progressHandler];
@@ -770,7 +756,7 @@
 }
 
 - (void)fetchOriginImageFile:(PHAsset *)asset resultHandler:(NSObject <PMResultHandler> *)handler progressHandler:(NSObject <PMProgressHandlerProtocol> *)progressHandler {
-    PHAssetResource *imageResource = [asset getAdjustResource];
+    PHAssetResource *imageResource = [asset getCurrentResource];
     if (!imageResource) {
         [handler reply:nil];
         return;
@@ -803,7 +789,8 @@
                              completionHandler:^(NSError *_Nullable error) {
         if (error) {
             NSLog(@"error = %@", error);
-            [handler reply:nil];
+            [self notifyProgress:progressHandler progress:0 state:PMProgressStateFailed];
+            [handler replyError:[NSString stringWithFormat:@"%@", error]];
         } else {
             [handler reply:path];
             [self notifySuccess:progressHandler];

@@ -8,11 +8,11 @@ import 'dart:typed_data' as typed_data;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 
+import '../../platform_utils.dart';
 import '../filter/base_filter.dart';
 import '../filter/classical/filter_option_group.dart';
 import '../filter/path_filter.dart';
 import '../internal/constants.dart';
-import '../internal/editor.dart';
 import '../internal/enums.dart';
 import '../internal/plugin.dart';
 import '../internal/progress_handler.dart';
@@ -28,15 +28,22 @@ class AssetPathEntity {
   AssetPathEntity({
     required this.id,
     required this.name,
-    @Deprecated('Use assetCountAsync instead. This will be removed in 3.0.0')
-        this.assetCount = 0,
     this.albumType = 1,
     this.lastModified,
     this.type = RequestType.common,
     this.isAll = false,
     PMFilter? filterOption,
+    @Deprecated(
+      'Use `albumTypeEx.darwin.type` instead. '
+      'This feature was deprecated after v3.1.0',
+    )
     this.darwinSubtype,
+    @Deprecated(
+      'Use `albumTypeEx.darwin.subtype` instead. '
+      'This feature was deprecated after v3.1.0',
+    )
     this.darwinType,
+    this.albumTypeEx,
   }) : filterOption = filterOption ??= FilterOptionGroup();
 
   /// Obtain an entity from ID.
@@ -68,13 +75,6 @@ class AssetPathEntity {
   ///  * Android: Path name.
   ///  * iOS/macOS: Album/Folder name.
   final String name;
-
-  /// Total assets count of the album.
-  ///
-  /// The synchronized count will cause performance regression on iOS,
-  /// here the asynchronized getter [assetCountAsync] is preferred.
-  @Deprecated('Use assetCountAsync instead. This will be removed in 3.0.0')
-  final int assetCount;
 
   /// Total assets count of the path with the asynchronized getter.
   Future<int> get assetCountAsync => plugin.getAssetCountFromPath(this);
@@ -108,12 +108,23 @@ class AssetPathEntity {
   /// The darwin collection type, in android, the value is always null.
   ///
   /// If the [albumType] is 2, the value will be null.
+  @Deprecated(
+    'Use `albumTypeEx.darwin.type` instead. '
+    'This feature was deprecated after v3.1.0',
+  )
   final PMDarwinAssetCollectionType? darwinType;
 
   /// The darwin collection subtype, in android, the value is always null.
   ///
   /// If the [albumType] is 2, the value will be null.
+  @Deprecated(
+    'Use `albumTypeEx.darwin.subtype` instead. '
+    'This feature was deprecated after v3.1.0',
+  )
   final PMDarwinAssetCollectionSubtype? darwinSubtype;
+
+  /// The extra information of the album type.
+  final AlbumType? albumTypeEx;
 
   /// Call this method to obtain new path entity.
   static Future<AssetPathEntity> obtainPathFromProperties({
@@ -184,16 +195,6 @@ class AssetPathEntity {
   }) {
     assert(albumType == 1, 'Only album can request for assets.');
     assert(size > 0, 'Page size must be greater than 0.');
-
-    final filterOption = this.filterOption;
-
-    if (filterOption is FilterOptionGroup) {
-      assert(
-        type == RequestType.image || !filterOption.onlyLivePhotos,
-        'Filtering only Live Photos is only supported '
-        'when the request type contains image.',
-      );
-    }
     return plugin.getAssetListPaged(
       id,
       page: page,
@@ -279,8 +280,17 @@ class AssetPathEntity {
     RequestType? type,
     bool? isAll,
     PMFilter? filterOption,
+    @Deprecated(
+      'Use `albumTypeEx` instead. '
+      'This feature was deprecated after v3.1.0',
+    )
     PMDarwinAssetCollectionType? darwinType,
+    @Deprecated(
+      'Use `albumTypeEx` instead. '
+      'This feature was deprecated after v3.1.0',
+    )
     PMDarwinAssetCollectionSubtype? darwinSubtype,
+    AlbumType? albumTypeEx,
   }) {
     return AssetPathEntity(
       id: id ?? this.id,
@@ -290,8 +300,11 @@ class AssetPathEntity {
       type: type ?? this.type,
       isAll: isAll ?? this.isAll,
       filterOption: filterOption ?? this.filterOption,
+      // ignore: deprecated_member_use_from_same_package
       darwinSubtype: darwinSubtype ?? this.darwinSubtype,
+      // ignore: deprecated_member_use_from_same_package
       darwinType: darwinType ?? this.darwinType,
+      albumTypeEx: albumTypeEx ?? this.albumTypeEx,
     );
   }
 
@@ -305,7 +318,12 @@ class AssetPathEntity {
         albumType == other.albumType &&
         type == other.type &&
         lastModified == other.lastModified &&
-        isAll == other.isAll;
+        isAll == other.isAll &&
+        // ignore: deprecated_member_use_from_same_package
+        darwinType == other.darwinType &&
+        // ignore: deprecated_member_use_from_same_package
+        darwinSubtype == other.darwinSubtype &&
+        albumTypeEx == other.albumTypeEx;
   }
 
   @override
@@ -315,7 +333,12 @@ class AssetPathEntity {
       albumType.hashCode ^
       type.hashCode ^
       lastModified.hashCode ^
-      isAll.hashCode;
+      isAll.hashCode ^
+      // ignore: deprecated_member_use_from_same_package
+      darwinType.hashCode ^
+      // ignore: deprecated_member_use_from_same_package
+      darwinSubtype.hashCode ^
+      albumTypeEx.hashCode;
 
   @override
   String toString() {
@@ -679,7 +702,7 @@ class AssetEntity {
   /// Check whether the asset has been deleted.
   Future<bool> get exists => plugin.assetExistsWithId(id);
 
-  /// Provide regular URL for players. Only available for audios and videos.
+  /// Provide regular URL for players.
   ///  * Android: Content URI, e.g.
   ///    `content://media/external/video/media/894857`.
   ///  * iOS/macOS: File URL. e.g.
@@ -688,15 +711,15 @@ class AssetEntity {
   /// See also:
   ///  * https://developer.android.com/reference/android/content/ContentUris
   ///  * https://developer.apple.com/documentation/avfoundation/avurlasset
-  Future<String?> getMediaUrl() async {
-    if (type == AssetType.video || type == AssetType.audio || isLivePhoto) {
-      return plugin.getMediaUrl(this);
-    }
-    return null;
+  Future<String?> getMediaUrl() {
+    return plugin.getMediaUrl(this);
   }
 
   bool get _platformMatched =>
-      Platform.isIOS || Platform.isMacOS || Platform.isAndroid;
+      Platform.isIOS ||
+      Platform.isMacOS ||
+      Platform.isAndroid ||
+      PlatformUtils.isOhos;
 
   Future<File?> _getFile({
     bool isOrigin = false,
@@ -732,8 +755,13 @@ class AssetEntity {
     if (!_platformMatched) {
       return null;
     }
-    if (Platform.isAndroid &&
-        int.parse(await plugin.getSystemVersion()) >= 29) {
+    if (Platform.isAndroid) {
+      final sdkInt = int.parse(await plugin.getSystemVersion());
+      if (sdkInt > 29) {
+        return plugin.getOriginBytes(id, progressHandler: progressHandler);
+      }
+    }
+    if (PlatformUtils.isOhos) {
       return plugin.getOriginBytes(id, progressHandler: progressHandler);
     }
     final File? file = await originFile;

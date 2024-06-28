@@ -215,6 +215,7 @@ class PhotoProvider extends ChangeNotifier {
       ..setOption(AssetType.audio, option)
       ..createTimeCond = createDtCond
       ..containsPathModified = _containsPathModified
+      // ignore: deprecated_member_use
       ..containsLivePhotos = _containsLivePhotos
       ..onlyLivePhotos = onlyLivePhotos;
   }
@@ -247,9 +248,11 @@ class PhotoProvider extends ChangeNotifier {
   }
 
   /// For path filter option
-  var _pathFilterOption = const PMPathFilter();
   PMPathFilter get pathFilterOption => _pathFilterOption;
-  List<PMDarwinAssetCollectionType> _pathTypeList = PMDarwinAssetCollectionType.values;
+  PMPathFilter _pathFilterOption = const PMPathFilter();
+
+  List<PMDarwinAssetCollectionType> _pathTypeList =
+      PMDarwinAssetCollectionType.values;
 
   List<PMDarwinAssetCollectionType> get pathTypeList => _pathTypeList;
 
@@ -258,7 +261,8 @@ class PhotoProvider extends ChangeNotifier {
     _onChangePathFilter();
   }
 
-  late List<PMDarwinAssetCollectionSubtype> _pathSubTypeList = _pathFilterOption.darwin.subType;
+  late List<PMDarwinAssetCollectionSubtype> _pathSubTypeList =
+      _pathFilterOption.darwin.subType;
 
   List<PMDarwinAssetCollectionSubtype> get pathSubTypeList => _pathSubTypeList;
 

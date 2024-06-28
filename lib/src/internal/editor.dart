@@ -5,22 +5,16 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:photo_manager/platform_utils.dart';
+
 import '../filter/path_filter.dart';
 import '../types/entity.dart';
 import 'plugin.dart';
 
 class Editor {
-  final IosEditor _ios = const IosEditor();
   final DarwinEditor _darwin = const DarwinEditor();
   final AndroidEditor _android = const AndroidEditor();
-
-  @Deprecated('Use `Editor.darwin` instead. This will be removed in 3.0.0')
-  IosEditor get iOS {
-    if (Platform.isIOS || Platform.isMacOS) {
-      return _ios;
-    }
-    throw const OSError('iOS Editor should only be use on iOS.');
-  }
+  final OhosEditor _ohos = const OhosEditor();
 
   /// Support iOS and macOS.
   DarwinEditor get darwin {
@@ -30,6 +24,7 @@ class Editor {
     throw const OSError('Darwin Editor should only be use on iOS or macOS.');
   }
 
+  /// Support Android.
   AndroidEditor get android {
     if (Platform.isAndroid) {
       return _android;
@@ -37,9 +32,18 @@ class Editor {
     throw const OSError('Android Editor should only be use on Android.');
   }
 
+  /// Support Openharmony.
+  OhosEditor get ohos {
+    if (PlatformUtils.isOhos) {
+      return _ohos;
+    }
+    throw const OSError('Ohos Editor should only be use on OpenHarmony.');
+  }
+
   /// Delete entities with specific IDs.
   ///
   /// Entities will be deleted no matter which album they're located at on iOS.
+  /// The method as [moveToTrash] on OpenHarmony, it's not support completely delete.
   Future<List<String>> deleteWithIds(List<String> ids) {
     return plugin.deleteWithIds(ids);
   }
@@ -212,7 +216,9 @@ class DarwinEditor {
     if (list.isEmpty) {
       return false;
     }
-    if (parent.darwinType == PMDarwinAssetCollectionType.smartAlbum) {
+    // ignore: deprecated_member_use_from_same_package
+    if ((parent.darwinType ?? parent.albumTypeEx?.darwin?.type) ==
+        PMDarwinAssetCollectionType.smartAlbum) {
       // Asset of smartAlbums can't be deleted.
       return false;
     }
@@ -224,7 +230,9 @@ class DarwinEditor {
   ///
   /// Returns `true` if the operation was successful; otherwise, `false`.
   Future<bool> deletePath(AssetPathEntity path) async {
-    if (path.darwinType == PMDarwinAssetCollectionType.smartAlbum) {
+    // ignore: deprecated_member_use_from_same_package
+    if ((path.darwinType ?? path.albumTypeEx?.darwin?.type) ==
+        PMDarwinAssetCollectionType.smartAlbum) {
       // SmartAlbums can't be deleted.
       return false;
     }
@@ -269,12 +277,6 @@ class DarwinEditor {
   }
 }
 
-/// An editor for iOS/macOS.
-class IosEditor extends DarwinEditor {
-  /// Creates a new [IosEditor] object.
-  const IosEditor();
-}
-
 /// An editor for Android.
 class AndroidEditor {
   /// Creates a new [AndroidEditor] object.
@@ -296,5 +298,35 @@ class AndroidEditor {
   /// device's storage. It returns `true` if this operation was successful; otherwise, `false`.
   Future<bool> removeAllNoExistsAsset() {
     return plugin.androidRemoveNoExistsAssets();
+  }
+
+  /// Move to trash
+  Future<List<String>> moveToTrash(List<AssetEntity> list) {
+    return plugin.moveToTrash(list);
+  }
+}
+
+/// An editor for OpenHarmony.
+class OhosEditor {
+  /// Creates a new [OhosEditor] object.
+  const OhosEditor();
+
+  /// Returns column names of the photo access.
+  Future<List<String>> ohosColumns() {
+    return plugin.ohosColumns();
+  }
+
+  /// Sets the favorite status of the given [entity].
+  ///
+  /// Returns the updated [AssetEntity] if the operation was successful; otherwise, `null`.
+  Future<AssetEntity?> favoriteAsset({
+    required AssetEntity entity,
+    required bool favorite,
+  }) async {
+    final bool result = await plugin.favoriteAsset(entity.id, favorite);
+    if (result) {
+      return entity.copyWith(isFavorite: favorite);
+    }
+    return null;
   }
 }

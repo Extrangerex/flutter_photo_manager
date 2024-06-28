@@ -11,7 +11,21 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
-import android.provider.MediaStore.MediaColumns.*
+import android.provider.MediaStore.MediaColumns.BUCKET_DISPLAY_NAME
+import android.provider.MediaStore.MediaColumns.BUCKET_ID
+import android.provider.MediaStore.MediaColumns.DATA
+import android.provider.MediaStore.MediaColumns.DATE_ADDED
+import android.provider.MediaStore.MediaColumns.DATE_MODIFIED
+import android.provider.MediaStore.MediaColumns.DATE_TAKEN
+import android.provider.MediaStore.MediaColumns.DISPLAY_NAME
+import android.provider.MediaStore.MediaColumns.DURATION
+import android.provider.MediaStore.MediaColumns.HEIGHT
+import android.provider.MediaStore.MediaColumns.MIME_TYPE
+import android.provider.MediaStore.MediaColumns.ORIENTATION
+import android.provider.MediaStore.MediaColumns.RELATIVE_PATH
+import android.provider.MediaStore.MediaColumns.TITLE
+import android.provider.MediaStore.MediaColumns.WIDTH
+import android.provider.MediaStore.MediaColumns._ID
 import android.provider.MediaStore.VOLUME_EXTERNAL
 import androidx.annotation.ChecksSdkIntAtLeast
 import androidx.exifinterface.media.ExifInterface
@@ -163,7 +177,7 @@ interface IDBUtils {
         }
 
         val id = getLong(_ID)
-        var date = if (isAboveAndroidQ) {
+        val date = if (isAboveAndroidQ) {
             var tmpTime = getLong(DATE_TAKEN) / 1000
             if (tmpTime == 0L) {
                 tmpTime = getLong(DATE_ADDED)
@@ -197,7 +211,7 @@ interface IDBUtils {
                     mmr.setDataSource(path)
                     width = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)
                         ?.toInt() ?: 0
-                    height = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)
+                    height = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)
                         ?.toInt() ?: 0
                     orientation =
                         mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)
@@ -648,7 +662,7 @@ interface IDBUtils {
         selectionArgs: Array<String>?,
         sortOrder: String?
     ): Cursor? {
-        fun log(logFunc: (log: String) -> Unit) {
+        fun log(logFunc: (log: String) -> Unit, cursor: Cursor?) {
             if (LogUtils.isLog) {
                 val sb = StringBuilder()
                 sb.appendLine("uri: $uri")
@@ -656,16 +670,20 @@ interface IDBUtils {
                 sb.appendLine("selection: $selection")
                 sb.appendLine("selectionArgs: ${selectionArgs?.joinToString(", ")}")
                 sb.appendLine("sortOrder: $sortOrder")
+                // format ? in selection and selectionArgs to display in log
+                val sql = selection?.replace("?", "%s")?.format(*selectionArgs ?: emptyArray())
+                sb.appendLine("sql: $sql")
+                sb.appendLine("cursor count: ${cursor?.count}")
                 logFunc(sb.toString())
             }
         }
 
         try {
             val cursor = query(uri, projection, selection, selectionArgs, sortOrder)
-            log(LogUtils::info)
+            log(LogUtils::info, cursor)
             return cursor
         } catch (e: Exception) {
-            log(LogUtils::error)
+            log(LogUtils::error, null)
             LogUtils.error("happen query error", e)
             throw e
         }
@@ -680,6 +698,36 @@ interface IDBUtils {
             return it?.count ?: 0
         }
     }
+
+    fun getAssetCount(
+        context: Context,
+        option: FilterOption,
+        requestType: Int,
+        galleryId: String,
+    ): Int {
+        val cr = context.contentResolver
+        val args = ArrayList<String>()
+        var where = option.makeWhere(requestType, args, false)
+
+        run {
+            val result = StringBuilder(where)
+            if (galleryId != PhotoManager.ALL_ID) {
+                if (result.trim().isNotEmpty()) {
+                    result.append(" AND ")
+                }
+                result.append("$BUCKET_ID = ?")
+                args.add(galleryId)
+            }
+
+            where = result.toString()
+        }
+
+        val order = option.orderByCondString()
+        cr.logQuery(allUri, arrayOf(_ID), where, args.toTypedArray(), order).use {
+            return it?.count ?: 0
+        }
+    }
+
 
     fun getAssetsByRange(
         context: Context,
